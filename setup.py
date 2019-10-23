@@ -4,7 +4,7 @@ import glob
 
 setup (
   name='iiif_downloader',
-  version='0.0.1',
+  version='0.0.2',
   packages=['iiif_downloader'],
   keywords = ['iiif', 'image-data', 'api'],
   description='Download images from IIIF servers',
