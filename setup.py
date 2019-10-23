@@ -13,6 +13,6 @@ setup (
   author_email='douglas.duhaime@gmail.com',
   license='MIT',
   install_requires=[
-    'requests==2.11.1',
+    'requests>=2.22.0',
   ],
 )
