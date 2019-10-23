@@ -42,7 +42,7 @@ class Manifest:
       out_path = os.path.join(self.out_dir, 'manifests', self.id)
       save_json(out_path, self.json, verbose=self.verbose)
 
-  def save_images(self):
+  def save_images(self, limit=None):
     '''Save self.json and all associated images to disk'''
     if self.json_present():
       self.save()
@@ -52,8 +52,10 @@ class Manifest:
           for k in j.get('images', []):
             url = k['resource']['@id']
             self.images.append(Image(size=self.size, url=url, out_dir=self.out_dir, verbose=self.verbose))
-    for i in self.images:
-      i.save()
+            if limit and len(self.images) >= limit:
+              for i in self.images: i.save()
+              return
+    for i in self.images: i.save()
 
 class Image:
   def __init__(self, *args, **kwargs):
