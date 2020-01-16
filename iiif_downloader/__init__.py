@@ -1,7 +1,7 @@
 import requests, json, os
 
 # shared
-default_size = '600,' # iiif formatted size - https://iiif.io/api/image/2.1/#image-request-uri-syntax
+default_width = 600 # iiif formatted size - https://iiif.io/api/image/2.1/#image-request-uri-syntax
 default_out_dir = 'iiif-downloads'
 default_verbose = True
 
@@ -12,7 +12,7 @@ class Manifest:
     self.images = []
     self.verbose = kwargs.get('verbose', default_verbose)
     self.out_dir = kwargs.get('out_dir', default_out_dir)
-    self.size = kwargs.get('size', default_size)
+    self.width = kwargs.get('width', default_width)
     if kwargs.get('url', False):
       self.load_from_url(kwargs.get('url'))
     self.make_out_dirs()
@@ -47,15 +47,17 @@ class Manifest:
     if self.json_present():
       self.save()
       # save all images in this manifest
+      c = 0
       for i in self.json.get('sequences', []):
         for j in i.get('canvases', []):
           for k in j.get('images', []):
             url = k['resource']['@id']
-            self.images.append(Image(size=self.size, url=url, out_dir=self.out_dir, verbose=self.verbose))
-            if limit and len(self.images) >= limit:
-              for i in self.images: i.save()
-              return
-    for i in self.images: i.save()
+            width = k['resource'].get('width', float('inf'))
+            w = min(width, self.width)
+            im = Image(width=w, url=url, out_dir=self.out_dir, verbose=self.verbose)
+            im.save()
+            c += 1
+            if limit and c >= limit: return
 
 class Image:
   def __init__(self, *args, **kwargs):
@@ -63,7 +65,7 @@ class Image:
     self.id = ''
     self.img = None
     self.url = kwargs.get('url', None)
-    self.size = kwargs.get('size', default_size)
+    self.width = kwargs.get('width', default_width)
     self.out_dir = kwargs.get('out_dir', default_out_dir)
     self.verbose = kwargs.get('verbose', default_verbose)
     if self.url:
@@ -82,7 +84,7 @@ class Image:
     #{scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
     #scheme, server, prefix, identifier, region, size, rotation, quality = [i for i in url.split('/') if i]
     split = url.split('/')
-    split[-3] = self.size
+    split[-3] = str(self.width) + ','
     return '/'.join(split)
 
   def save(self):
