@@ -1,7 +1,7 @@
 import requests, json, os
 
 # shared
-default_width = 600000 # iiif formatted size - https://iiif.io/api/image/2.1/#image-request-uri-syntax
+default_width = 600 # iiif formatted size - https://iiif.io/api/image/2.1/#image-request-uri-syntax
 default_out_dir = 'iiif-downloads'
 default_verbose = True
 
@@ -47,17 +47,17 @@ class Manifest:
     if self.json_present():
       self.save()
       # save all images in this manifest
+      c = 0
       for i in self.json.get('sequences', []):
         for j in i.get('canvases', []):
           for k in j.get('images', []):
             url = k['resource']['@id']
             width = k['resource'].get('width', float('inf'))
             w = min(width, self.width)
-            self.images.append(Image(width=w, url=url, out_dir=self.out_dir, verbose=self.verbose))
-            if limit and len(self.images) >= limit:
-              for i in self.images: i.save()
-              return
-    for i in self.images: i.save()
+            im = Image(width=w, url=url, out_dir=self.out_dir, verbose=self.verbose)
+            im.save()
+            c += 1
+            if limit and c >= limit: return
 
 class Image:
   def __init__(self, *args, **kwargs):
