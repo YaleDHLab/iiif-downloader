@@ -28,7 +28,7 @@ class Manifest:
     '''Load a IIIF manifest from a url'''
     if self.verbose: print(' * loading manifest from url', url)
     self.json = requests.get(url).json()
-    self.id = self.json.get('@id', '').split('/')[-1].rstrip('.json')
+    self.id = self.json.get('@id', '').replace('/', '||').rstrip('.json')
 
   def json_present(self):
     if not self.json:
@@ -76,7 +76,7 @@ class Image:
     url = args[0] if len(args) else self.url
     url = self.format_url(url)
     if self.verbose: print(' * loading image from url', url)
-    self.id = url.split('/')[4]
+    self.id = url.split('/')[-5]
     self.img = requests.get(url).content
 
   def format_url(self, url):
@@ -101,8 +101,5 @@ def save_json(path, obj, verbose=default_verbose):
     print(' * saving manifest to', path)
   if not path.endswith('.json'):
     path += '.json'
-  if not os.path.exists(path):
-    with open(path, 'w') as out:
-      json.dump(obj, out)
-  else:
-    print(' ! refusing to overwrite content at location', path)
+  with open(path, 'w') as out:
+    json.dump(obj, out)
