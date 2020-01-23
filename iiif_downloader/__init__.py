@@ -52,9 +52,15 @@ class Manifest:
         for j in i.get('canvases', []):
           for k in j.get('images', []):
             url = k['resource']['@id']
-            width = k['resource'].get('width', float('inf'))
-            w = min(width, self.width)
-            im = Image(width=w, url=url, out_dir=self.out_dir, verbose=self.verbose)
+            # load the image metadata
+            meta_url = '/'.join(url.split('/')[:-4]) + '/info.json'
+            meta = requests.get(meta_url).json()
+            # allow discrete sizes in image json to take precedence
+            if 'sizes' in meta:
+              width = meta['sizes'][-1]['width']
+            else:
+              width = k['resource'].get('width', self.width)
+            im = Image(width=width, url=url, out_dir=self.out_dir, verbose=self.verbose)
             im.save()
             c += 1
             if limit and c >= limit: return
@@ -84,7 +90,8 @@ class Image:
     #{scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
     #scheme, server, prefix, identifier, region, size, rotation, quality = [i for i in url.split('/') if i]
     split = url.split('/')
-    split[-3] = str(self.width) + ','
+    split[-3] = str(self.width)
+    if self.width != 'full': split[-3] += ','
     return '/'.join(split)
 
   def save(self):
